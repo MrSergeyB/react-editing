@@ -1,31 +1,41 @@
 import React, {useState, useEffect} from "react";
+import {connect} from "react-redux";
+import {addInput, addEditedInputs} from "../../actions/inputActions";
 import "./input-from.css";
 
-const InputForm = ({
-  updateUserInputs,
-  editMode,
-  handleEdit,
-  handleCancel,
-  task,
-  price,
-  setTask,
-  setPrice,
-}) => {
+const InputForm = ({addInput, editItem, editMode, addEditedInputs}) => {
+  const [task, setTask] = useState("");
+  const [price, setPrice] = useState("");
+
+  useEffect(() => {
+    if (editMode) {
+      setPrice(editItem[0].price);
+      setTask(editItem[0].task);
+    }
+    // eslint-disable-next-line
+  }, [editMode]);
+
+  const clearInputFields = () => {
+    setPrice("");
+    setTask("");
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (task.trim() !== "" && price !== "") {
-      if (!editMode) {
-        updateUserInputs(task, price);
-        setTask("");
-        setPrice("");
-      } else {
-        handleEdit(task, price);
-        setTask("");
-        setPrice("");
-      }
+    if (editMode) {
+      addEditedInputs(editItem[0].id, task, price);
+      clearInputFields();
     } else {
-      alert("Input fiels should not be empty");
+      addInput(task, price);
+      clearInputFields();
     }
+  };
+
+  const handleCancel = (e) => {
+    e.preventDefault();
+
+    addEditedInputs(editItem[0].id, task, price);
+    clearInputFields();
   };
 
   return (
@@ -49,14 +59,7 @@ const InputForm = ({
         Save
       </button>
       {editMode ? (
-        <button
-          className="cancel-btn"
-          onClick={() => {
-            setTask("");
-            setPrice("");
-            handleCancel();
-          }}
-        >
+        <button className="cancel-btn" onClick={handleCancel}>
           Cancel
         </button>
       ) : null}
@@ -64,4 +67,9 @@ const InputForm = ({
   );
 };
 
-export default InputForm;
+const mapStateToProps = (state) => ({
+  editItem: state.inputs.editItem,
+  editMode: state.inputs.editMode,
+});
+
+export default connect(mapStateToProps, {addInput, addEditedInputs})(InputForm);
